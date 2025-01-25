@@ -1,9 +1,8 @@
 <script setup lang="ts">
+import { Button } from '@/Components/ui/button'
+import { Input } from '@/Components/ui/input'
+import { Label } from '@/Components/ui/label'
 import GuestLayout from '@/Layouts/GuestLayout.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 
 const props = defineProps<{
@@ -29,69 +28,43 @@ const submit = () => {
 
 <template>
     <GuestLayout>
+
         <Head title="Reset Password" />
 
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="email" value="Email" />
-
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autofocus
-                    autocomplete="username"
-                />
-
-                <InputError class="mt-2" :message="form.errors.email" />
+        <div class="grid gap-6">
+            <div class="grid gap-2 text-center">
+                <h1 class="text-3xl font-bold">Reset Password</h1>
+                <p class="text-balance text-muted-foreground">
+                    Enter your new password below
+                </p>
             </div>
 
-            <div class="mt-4">
-                <InputLabel for="password" value="Password" />
+            <form @submit.prevent="submit" class="grid gap-4">
+                <div class="grid gap-2">
+                    <Label for="email">Email</Label>
+                    <Input id="email" type="email" v-model="form.email" required autofocus autocomplete="username" />
+                    <span v-if="form.errors.email" class="text-sm text-red-600">{{ form.errors.email }}</span>
+                </div>
 
-                <TextInput
-                    id="password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password"
-                    required
-                    autocomplete="new-password"
-                />
+                <div class="grid gap-2">
+                    <Label for="password">Password</Label>
+                    <Input id="password" type="password" v-model="form.password" required autocomplete="new-password" />
+                    <span v-if="form.errors.password" class="text-sm text-red-600">{{ form.errors.password }}</span>
+                </div>
 
-                <InputError class="mt-2" :message="form.errors.password" />
-            </div>
+                <div class="grid gap-2">
+                    <Label for="password_confirmation">Confirm Password</Label>
+                    <Input id="password_confirmation" type="password" v-model="form.password_confirmation" required
+                        autocomplete="new-password" />
+                    <span v-if="form.errors.password_confirmation" class="text-sm text-red-600">
+                        {{ form.errors.password_confirmation }}
+                    </span>
+                </div>
 
-            <div class="mt-4">
-                <InputLabel
-                    for="password_confirmation"
-                    value="Confirm Password"
-                />
-
-                <TextInput
-                    id="password_confirmation"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password_confirmation"
-                    required
-                    autocomplete="new-password"
-                />
-
-                <InputError
-                    class="mt-2"
-                    :message="form.errors.password_confirmation"
-                />
-            </div>
-
-            <div class="mt-4 flex items-center justify-end">
-                <PrimaryButton
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
+                <Button type="submit" class="w-full" :disabled="form.processing">
                     Reset Password
-                </PrimaryButton>
-            </div>
-        </form>
+                </Button>
+            </form>
+        </div>
     </GuestLayout>
 </template>
