@@ -9,7 +9,7 @@ class Board extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'description', 'board_template_id'];
+    protected $fillable = ['name', 'description', 'board_template_id', 'owner_id'];
 
     protected $casts = [
         'locked_at' => 'datetime',
