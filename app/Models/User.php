@@ -45,4 +45,29 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Get the boards owned by the user.
+     */
+    public function ownedBoards()
+    {
+        return $this->hasMany(Board::class, 'owner_id');
+    }
+
+    /**
+     * Get the replies created by the user.
+     */
+    public function replies()
+    {
+        return $this->hasMany(Reply::class);
+    }
+
+    /**
+     * Get the replies that the user has voted on.
+     */
+    public function votedReplies()
+    {
+        return $this->belongsToMany(Reply::class, 'reply_votes')
+            ->withTimestamps();
+    }
 }
