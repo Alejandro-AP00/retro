@@ -16,18 +16,33 @@ class BoardController extends Controller
 {
     public function index(Request $request): Response
     {
+        if ($request->user()->cannot('viewAny', Board::class)) {
+            abort(403);
+        }
+
         return Inertia::render('Boards/Index', [
-            'boards' => $request->user()->ownedBoards()
-                ->with('columns')
+            'boards' => Board::with('columns')
+                ->where('team_id', $request->user()->current_team_id)
                 ->latest()
                 ->get()
         ]);
     }
 
-    public function create(): Response
+    public function show(Request $request, Board $board): Response
+    {
+        if ($request->user()->cannot('view', $board)) {
+            abort(403);
+        }
+
+        return Inertia::render('Boards/Show', [
+            'board' => $board->load('columns.replies.user')
+        ]);
+    }
+
+    public function create(Request $request): Response
     {
         return Inertia::render('Boards/Create', [
-            'templates' => BoardTemplate::all()
+            'templates' => BoardTemplate::where('team_id', $request->user()->current_team_id)->get()
         ]);
     }
 
@@ -35,12 +50,18 @@ class BoardController extends Controller
     {
         $template = BoardTemplate::findOrFail($request->board_template_id);
 
+        if ($request->user()->cannot('create', [Board::class, $template])) {
+            abort(403);
+        }
+
+
         return DB::transaction(function () use ($request, $template) {
             $board = Board::create([
                 'name' => $request->name,
                 'description' => $request->description,
                 'owner_id' => $request->user()->id,
                 'board_template_id' => $template->id,
+                'team_id' => $request->user()->current_team_id,
             ]);
 
             // Create columns based on template
@@ -56,16 +77,5 @@ class BoardController extends Controller
                 ->route('boards.show', $board)
                 ->with('success', 'Board created successfully.');
         });
-    }
-
-    public function show(Request $request, Board $board): Response
-    {
-        if ($request->user()->cannot('view', $board)) {
-            abort(403);
-        }
-
-        return Inertia::render('Boards/Show', [
-            'board' => $board->load('columns.replies.user')
-        ]);
     }
 }

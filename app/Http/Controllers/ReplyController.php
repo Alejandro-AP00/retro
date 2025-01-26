@@ -16,8 +16,8 @@ class ReplyController extends Controller
     {
         $column = Column::findOrFail($request->column_id);
 
-        if ($column->board->isLocked()) {
-            return response()->json(['message' => 'This board is locked.'], 403);
+        if ($request->user()->cannot('create', [Reply::class, $column])) {
+            return response()->json(['message' => 'This board is locked or you don\'t have access.'], 403);
         }
 
         $reply = Reply::create([

@@ -11,8 +11,8 @@ class ReplyVoteController extends Controller
 {
     public function store(Request $request, Reply $reply): JsonResponse
     {
-        if ($reply->column->board->isLocked()) {
-            return response()->json(['message' => 'This board is locked.'], 403);
+        if ($request->user()->cannot('vote', $reply)) {
+            return response()->json(['message' => 'This board is locked or you don\'t have access.'], 403);
         }
 
         if ($request->user()->votedReplies()->where('reply_id', $reply->id)->exists()) {

@@ -8,6 +8,7 @@ use App\Http\Controllers\BoardTemplateController;
 use App\Http\Controllers\BoardController;
 use App\Http\Controllers\ReplyController;
 use App\Http\Controllers\ReplyVoteController;
+use App\Http\Controllers\CurrentTeamController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -40,6 +41,9 @@ Route::middleware('auth')->group(function () {
 
     Route::post('replies/{reply}/votes', [ReplyVoteController::class, 'store'])
         ->name('replies.votes.store');
+
+    Route::put('/current-team', [CurrentTeamController::class, 'update'])
+        ->name('current-team.update');
 });
 
 require __DIR__.'/auth.php';

@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('board_templates', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('team_id')->constrained('teams');
             $table->string('name');
             $table->text('description')->nullable();
             $table->json('columns')->default('[]'); // Add JSON column for storing column configurations

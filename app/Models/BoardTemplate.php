@@ -9,7 +9,7 @@ class BoardTemplate extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'description', 'columns'];
+    protected $fillable = ['name', 'description', 'columns', 'team_id'];
 
     protected function casts()
     {
@@ -21,5 +21,10 @@ class BoardTemplate extends Model
     public function boards()
     {
         return $this->hasMany(Board::class);
+    }
+
+    public function team()
+    {
+        return $this->belongsTo(Team::class);
     }
 }

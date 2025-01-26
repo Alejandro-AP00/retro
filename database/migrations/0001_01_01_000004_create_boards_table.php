@@ -10,10 +10,11 @@ return new class extends Migration
     {
         Schema::create('boards', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->text('description')->nullable();
+            $table->foreignId('team_id')->constrained('teams');
             $table->foreignId('owner_id')->constrained('users');
             $table->foreignId('board_template_id')->nullable()->constrained('board_templates');
+            $table->string('name');
+            $table->text('description')->nullable();
             $table->timestamp('locked_at')->nullable();
             $table->timestamps();
         });

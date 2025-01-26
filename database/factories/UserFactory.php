@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Team;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -30,6 +31,16 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
+    }
+
+    public function withTeam(array $attributes = []): static
+    {
+        return $this->afterCreating(function ($user) use ($attributes) {
+            $team = Team::factory()->create($attributes);
+            $user->teams()->attach($team);
+            $user->switchTeam($team);
+            return $user;
+        });
     }
 
     /**

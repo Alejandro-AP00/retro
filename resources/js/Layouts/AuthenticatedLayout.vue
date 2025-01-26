@@ -85,27 +85,27 @@ const navItems = [
     // Add more navigation items here
 ];
 
-const teams = [
-    {
-        name: 'Acme Inc',
-        logo: GalleryVerticalEnd,
-        plan: 'Enterprise',
+const props = defineProps({
+    teams: {
+        type: Array,
+        required: true
     },
-    {
-        name: 'Acme Corp.',
-        logo: AudioWaveform,
-        plan: 'Startup',
-    },
-    {
-        name: 'Evil Corp.',
-        logo: Command,
-        plan: 'Free',
-    },
-]
-const activeTeam = ref(teams[0])
+    currentTeam: {
+        type: Object,
+        required: true
+    }
+})
 
-function setActiveTeam(team: typeof teams[number]) {
-    activeTeam.value = team
+const switchTeam = async (team) => {
+    await router.put(route('current-team.update'), {
+        team_id: team.id
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            // Force reload to update permissions
+            window.location.reload()
+        }
+    })
 }
 </script>
 
@@ -121,11 +121,10 @@ function setActiveTeam(team: typeof teams[number]) {
                                     class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
                                     <div
                                         class="flex items-center justify-center rounded-lg aspect-square size-8 bg-sidebar-primary text-sidebar-primary-foreground">
-                                        <component :is="activeTeam.logo" class="size-4" />
+                                        {{ currentTeam.name.charAt(0) }}
                                     </div>
                                     <div class="grid flex-1 text-sm leading-tight text-left">
-                                        <span class="font-semibold truncate">{{ activeTeam.name }}</span>
-                                        <span class="text-xs truncate">{{ activeTeam.plan }}</span>
+                                        <span class="font-semibold truncate">{{ currentTeam.name }}</span>
                                     </div>
                                     <ChevronsUpDown class="ml-auto" />
                                 </SidebarMenuButton>
@@ -135,16 +134,17 @@ function setActiveTeam(team: typeof teams[number]) {
                                 <DropdownMenuLabel class="text-xs text-muted-foreground">
                                     Teams
                                 </DropdownMenuLabel>
-                                <DropdownMenuItem v-for="(team, index) in teams" :key="team.name" class="gap-2 p-2"
-                                    @click="setActiveTeam(team)">
+                                <DropdownMenuItem v-for="team in teams" :key="team.id" class="gap-2 p-2"
+                                    @click="switchTeam(team)">
                                     <div class="flex items-center justify-center border rounded-sm size-6">
-                                        <component :is="team.logo" class="size-4 shrink-0" />
+                                        {{ team.name.charAt(0) }}
                                     </div>
                                     {{ team.name }}
-                                    <DropdownMenuShortcut>⌘{{ index + 1 }}</DropdownMenuShortcut>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem class="gap-2 p-2">
+                                <DropdownMenuItem v-if="$page.props.auth.user.can.create_team" class="gap-2 p-2"
+                                    as-child>
+                                    <Link :href="route('teams.create')">
                                     <div
                                         class="flex items-center justify-center border rounded-md size-6 bg-background">
                                         <Plus class="size-4" />
@@ -152,6 +152,7 @@ function setActiveTeam(team: typeof teams[number]) {
                                     <div class="font-medium text-muted-foreground">
                                         Add team
                                     </div>
+                                    </Link>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>

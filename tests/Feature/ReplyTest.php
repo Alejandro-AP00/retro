@@ -8,8 +8,10 @@ use App\Models\User;
 use App\Models\Board;
 use App\Models\Column;
 use App\Models\Reply;
+use App\Models\Team;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class ReplyTest extends TestCase
@@ -17,14 +19,22 @@ class ReplyTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+    private Team $team;
     private Board $board;
     private Column $column;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->user = User::factory()->create();
-        $this->board = Board::factory()->create(['locked_at' => null]);
+        [$this->user, $this->team] = $this->createUserWithTeam('member');
+
+        $this->board = Board::factory()
+            ->forTeam($this->team)
+            ->create([
+                'locked_at' => null,
+                'owner_id' => $this->user->id
+            ]);
+
         $this->column = Column::factory()->create(['board_id' => $this->board->id]);
     }
 
@@ -77,7 +87,7 @@ class ReplyTest extends TestCase
             ]);
 
         $response->assertStatus(403)
-            ->assertJson(['message' => 'This board is locked.']);
+            ->assertJson(['message' => 'This board is locked or you don\'t have access.']);
 
         $this->assertDatabaseMissing('replies', [
             'content' => 'Test reply content',
@@ -113,7 +123,9 @@ class ReplyTest extends TestCase
         Event::fake([ReplyDeleted::class]);
 
         $otherUser = User::factory()->create();
-        $board = Board::factory()->create(['owner_id' => $this->user->id]);
+        $board = Board::factory()
+            ->forTeam($this->team)
+            ->create(['owner_id' => $this->user->id]);
         $column = Column::factory()->create(['board_id' => $board->id]);
         $reply = Reply::factory()->create([
             'user_id' => $otherUser->id,
@@ -133,11 +145,36 @@ class ReplyTest extends TestCase
         });
     }
 
+    public function test_admin_can_delete_any_reply_in_team()
+    {
+        Event::fake([ReplyDeleted::class]);
+        $this->user->syncRoles(['admin']);
+
+        $otherUser = User::factory()->create();
+        $otherBoard = Board::factory()
+            ->forTeam($this->team)
+            ->create(['owner_id' => $otherUser->id]);
+        $otherColumn = Column::factory()->create(['board_id' => $otherBoard->id]);
+        $reply = Reply::factory()->create([
+            'user_id' => $otherUser->id,
+            'column_id' => $otherColumn->id,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->deleteJson(route('replies.destroy', $reply));
+
+        $response->assertStatus(204);
+        $this->assertDatabaseMissing('replies', ['id' => $reply->id]);
+    }
+
     public function test_user_cannot_delete_others_reply()
     {
         Event::fake([ReplyDeleted::class]);
 
         $otherUser = User::factory()->create();
+
+        $this->board->update(['owner_id' => User::factory()->create()->id]);
+
         $reply = Reply::factory()->create([
             'user_id' => $otherUser->id,
             'column_id' => $this->column->id,
@@ -146,7 +183,7 @@ class ReplyTest extends TestCase
         $response = $this->actingAs($this->user)
             ->deleteJson(route('replies.destroy', $reply));
 
-        $response->assertStatus(403);
+        $response->assertForbidden();
 
         $this->assertDatabaseHas('replies', ['id' => $reply->id]);
 

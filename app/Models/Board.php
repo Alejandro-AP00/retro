@@ -9,7 +9,7 @@ class Board extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'description', 'board_template_id', 'owner_id', 'locked_at'];
+    protected $fillable = ['name', 'description', 'board_template_id', 'owner_id', 'locked_at', 'team_id'];
 
     protected $casts = [
         'locked_at' => 'datetime',
@@ -33,5 +33,10 @@ class Board extends Model
     public function isLocked()
     {
         return !is_null($this->locked_at) && $this->locked_at->isPast();
+    }
+
+    public function team()
+    {
+        return $this->belongsTo(Team::class);
     }
 }
