@@ -24,7 +24,7 @@ class ReplyTest extends TestCase
     {
         parent::setUp();
         $this->user = User::factory()->create();
-        $this->board = Board::factory()->create();
+        $this->board = Board::factory()->create(['locked_at' => null]);
         $this->column = Column::factory()->create(['board_id' => $this->board->id]);
     }
 

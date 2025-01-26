@@ -22,7 +22,7 @@ class ReplyVoteTest extends TestCase
     {
         parent::setUp();
         $this->user = User::factory()->create();
-        $board = Board::factory()->create();
+        $board = Board::factory()->create(['locked_at' => null]);
         $column = Column::factory()->create(['board_id' => $board->id]);
         $this->reply = Reply::factory()->create(['column_id' => $column->id]);
     }
