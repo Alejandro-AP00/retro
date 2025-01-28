@@ -5,6 +5,12 @@ import { Label } from '@/Components/ui/label'
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
+const props = defineProps<{
+    invitation?: {
+        email: string,
+        name: string,
+    }
+}>();
 const form = useForm({
     name: '',
     email: props.invitation?.email || '',

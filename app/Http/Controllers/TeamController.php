@@ -17,7 +17,7 @@ class TeamController extends Controller
         }
 
         return Inertia::render('Teams/Edit', [
-            'team' => $team->load('users'),
+            'team' => $team->load(['users.roles']),
             'availableRoles' => Role::all(['id', 'name']),
         ]);
     }

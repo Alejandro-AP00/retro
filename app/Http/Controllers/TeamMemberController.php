@@ -15,7 +15,7 @@ class TeamMemberController extends Controller
             abort(403);
         }
 
-        $user->syncRoles([$request->role], $team->id);
+        $user->syncRoles($request->role);
 
         return back()->with('success', 'Member role updated successfully.');
     }

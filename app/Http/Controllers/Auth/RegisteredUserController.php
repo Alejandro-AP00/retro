@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Team;
 use App\Models\User;
 use App\Models\TeamInvitation;
 use App\Providers\RouteServiceProvider;
@@ -69,10 +70,18 @@ class RegisteredUserController extends Controller
             if (!$invitation->isExpired() && $invitation->email === $user->email) {
                 $user->teams()->attach($invitation->team_id);
                 $user->switchTeam($invitation->team);
-                $user->assignRole($invitation->role, $invitation->team_id);
+                $user->assignRole($invitation->role);
 
                 $invitation->update(['registered_at' => now()]);
             }
+        } else{
+            $team = Team::create([
+                'name' => $request->name . "'s Team"
+            ]);
+            $user->teams()->attach($team);
+            $user->switchTeam($team);
+            $user->assignRole('admin');
+
         }
 
         event(new Registered($user));

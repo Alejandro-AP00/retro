@@ -72,9 +72,10 @@ import {
     Trash2,
     User,
 } from 'lucide-vue-next'
+import SidebarGroupLabel from '@/Components/ui/sidebar/SidebarGroupLabel.vue';
 
 const showingNavigationDropdown = ref(false);
-
+const $page = usePage()
 // You can expand this with more navigation items as needed
 const navItems = [
     {
@@ -82,21 +83,13 @@ const navItems = [
         url: route('dashboard'),
         isActive: route().current('dashboard'),
     },
+    {
+        title: 'Settings',
+        url: route('teams.edit', { team: $page.props.auth.user.current_team }),
+        isActive: route().current('teams.edit'),
+    },
     // Add more navigation items here
 ];
-
-// const props = defineProps({
-//     teams: {
-//         type: Array,
-//         required: true
-//     },
-//     currentTeam: {
-//         type: Object,
-//         required: true
-//     }
-// })
-
-const $page = usePage()
 
 const teams = computed(() => {
     return $page.props.auth.user.teams;
@@ -152,6 +145,15 @@ const switchTeam = async (team) => {
                                     {{ team.name }}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
+                                <DropdownMenuItem class="gap-2 p-2">
+                                    <div
+                                        class="flex items-center justify-center border rounded-md size-6 bg-background">
+                                        <Plus class="size-4" />
+                                    </div>
+                                    <div class="font-medium text-muted-foreground">
+                                        Add team
+                                    </div>
+                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </SidebarMenuItem>
@@ -160,6 +162,7 @@ const switchTeam = async (team) => {
 
             <SidebarContent>
                 <SidebarGroup>
+                    <SidebarGroupLabel>Team</SidebarGroupLabel>
                     <SidebarMenu>
                         <SidebarMenuItem v-for="item in navItems" :key="item.title">
                             <SidebarMenuButton :class="{ 'bg-sidebar-accent': item.isActive }" as-child>
@@ -188,6 +191,7 @@ const switchTeam = async (team) => {
                                         <span class="font-semibold truncate">{{ $page.props.auth.user.name }}</span>
                                         <span class="text-xs truncate">{{ $page.props.auth.user.email }}</span>
                                     </div>
+                                    <ChevronsUpDown class="ml-auto size-4" />
                                 </SidebarMenuButton>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent class="w-56" align="end">
