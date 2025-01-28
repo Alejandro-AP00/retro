@@ -24,6 +24,11 @@ class Team extends Model
         return $this->hasMany(Board::class);
     }
 
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(TeamInvitation::class);
+    }
+
     public function boardTemplates(): HasMany
     {
         return $this->hasMany(BoardTemplate::class);

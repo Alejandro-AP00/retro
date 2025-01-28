@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\TeamInvitation;
+use App\Providers\RouteServiceProvider;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,9 +20,25 @@ class RegisteredUserController extends Controller
     /**
      * Display the registration view.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        return Inertia::render('Auth/Register');
+        $invitation = null;
+        if ($request->has('invitation')) {
+            $invitation = TeamInvitation::where('token', $request->invitation)
+                ->whereNull('registered_at')
+                ->firstOrFail();
+
+            if ($invitation->isExpired()) {
+                abort(403, 'This invitation has expired.');
+            }
+        }
+
+        return Inertia::render('Auth/Register', [
+            'invitation' => $invitation ? [
+                'email' => $invitation->email,
+                'team' => $invitation->team->name,
+            ] : null,
+        ]);
     }
 
     /**
@@ -32,8 +50,9 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'email' => 'required|string|email|max:255|unique:users',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'invitation_token' => 'nullable|string|exists:team_invitations,token',
         ]);
 
         $user = User::create([
@@ -41,6 +60,20 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+
+        if ($request->invitation_token) {
+            $invitation = TeamInvitation::where('token', $request->invitation_token)
+                ->whereNull('registered_at')
+                ->firstOrFail();
+
+            if (!$invitation->isExpired() && $invitation->email === $user->email) {
+                $user->teams()->attach($invitation->team_id);
+                $user->switchTeam($invitation->team);
+                $user->assignRole($invitation->role, $invitation->team_id);
+
+                $invitation->update(['registered_at' => now()]);
+            }
+        }
 
         event(new Registered($user));
 

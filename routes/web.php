@@ -9,6 +9,9 @@ use App\Http\Controllers\BoardController;
 use App\Http\Controllers\ReplyController;
 use App\Http\Controllers\ReplyVoteController;
 use App\Http\Controllers\CurrentTeamController;
+use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TeamInvitationController;
+use App\Http\Controllers\TeamMemberController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -44,6 +47,16 @@ Route::middleware('auth')->group(function () {
 
     Route::put('/current-team', [CurrentTeamController::class, 'update'])
         ->name('current-team.update');
+
+    Route::get('/teams/{team}/edit', [TeamController::class, 'edit'])->name('teams.edit');
+    Route::put('/teams/{team}', [TeamController::class, 'update'])->name('teams.update');
+
+    Route::post('/teams/{team}/members', [TeamInvitationController::class, 'store'])->name('team-invitations.store');
+    Route::put('/teams/{team}/members/{user}', [TeamMemberController::class, 'update'])->name('team-members.update');
+    Route::delete('/teams/{team}/members/{user}', [TeamMemberController::class, 'destroy'])->name('team-members.destroy');
 });
+
+Route::get('/team-invitations/{invitation}', [TeamInvitationController::class, 'accept'])
+    ->name('team-invitations.accept');
 
 require __DIR__.'/auth.php';

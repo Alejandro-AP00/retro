@@ -7,9 +7,10 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const form = useForm({
     name: '',
-    email: '',
+    email: props.invitation?.email || '',
     password: '',
     password_confirmation: '',
+    invitation_token: new URLSearchParams(window.location.search).get('invitation'),
 });
 
 const submit = () => {
@@ -32,6 +33,10 @@ const submit = () => {
                 <p class="text-balance text-muted-foreground">
                     Enter your details below to create your account
                 </p>
+            </div>
+
+            <div v-if="invitation" class="mb-4 text-sm text-gray-600">
+                You've been invited to join {{ invitation.team }}
             </div>
 
             <form @submit.prevent="submit" class="grid gap-4">

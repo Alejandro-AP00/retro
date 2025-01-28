@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import ThemeSwitcher from '@/Components/ThemeSwitcher.vue'
 import { Moon, Sun } from 'lucide-vue-next'
@@ -85,15 +85,25 @@ const navItems = [
     // Add more navigation items here
 ];
 
-const props = defineProps({
-    teams: {
-        type: Array,
-        required: true
-    },
-    currentTeam: {
-        type: Object,
-        required: true
-    }
+// const props = defineProps({
+//     teams: {
+//         type: Array,
+//         required: true
+//     },
+//     currentTeam: {
+//         type: Object,
+//         required: true
+//     }
+// })
+
+const $page = usePage()
+
+const teams = computed(() => {
+    return $page.props.auth.user.teams;
+})
+
+const currentTeam = computed(() => {
+    return $page.props.auth.user.current_team;
 })
 
 const switchTeam = async (team) => {
@@ -121,10 +131,10 @@ const switchTeam = async (team) => {
                                     class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
                                     <div
                                         class="flex items-center justify-center rounded-lg aspect-square size-8 bg-sidebar-primary text-sidebar-primary-foreground">
-                                        {{ currentTeam.name.charAt(0) }}
+                                        {{ currentTeam?.name.charAt(0) }}
                                     </div>
                                     <div class="grid flex-1 text-sm leading-tight text-left">
-                                        <span class="font-semibold truncate">{{ currentTeam.name }}</span>
+                                        <span class="font-semibold truncate">{{ currentTeam?.name }}</span>
                                     </div>
                                     <ChevronsUpDown class="ml-auto" />
                                 </SidebarMenuButton>
@@ -142,18 +152,6 @@ const switchTeam = async (team) => {
                                     {{ team.name }}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem v-if="$page.props.auth.user.can.create_team" class="gap-2 p-2"
-                                    as-child>
-                                    <Link :href="route('teams.create')">
-                                    <div
-                                        class="flex items-center justify-center border rounded-md size-6 bg-background">
-                                        <Plus class="size-4" />
-                                    </div>
-                                    <div class="font-medium text-muted-foreground">
-                                        Add team
-                                    </div>
-                                    </Link>
-                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </SidebarMenuItem>
