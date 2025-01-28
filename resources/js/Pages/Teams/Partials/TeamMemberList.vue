@@ -1,5 +1,6 @@
 <script setup>
 import { useForm } from '@inertiajs/vue3'
+import { useToast } from '@/Components/ui/toast/use-toast'
 import { Button } from '@/Components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select'
 import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card'
@@ -16,19 +17,49 @@ const props = defineProps({
     }
 })
 
+const { toast } = useToast()
+
 const updateRoleForm = useForm({
     role: ''
 })
 
 const updateRole = (userId) => {
-    updateRoleForm.put(route('team-members.update', [props.team.id, userId]))
+    updateRoleForm.put(route('team-members.update', [props.team.id, userId]), {
+        onSuccess: () => {
+            toast({
+                title: "Role Updated",
+                description: "Team member's role has been updated successfully.",
+            })
+        },
+        onError: () => {
+            toast({
+                title: "Error",
+                description: "Failed to update member's role.",
+                variant: "destructive",
+            })
+        }
+    })
 }
 
 const removeMemberForm = useForm({})
 
 const removeMember = (userId) => {
     if (confirm('Are you sure you want to remove this member?')) {
-        removeMemberForm.delete(route('team-members.destroy', [props.team.id, userId]))
+        removeMemberForm.delete(route('team-members.destroy', [props.team.id, userId]), {
+            onSuccess: () => {
+                toast({
+                    title: "Member Removed",
+                    description: "Team member has been removed successfully.",
+                })
+            },
+            onError: () => {
+                toast({
+                    title: "Error",
+                    description: "Failed to remove team member.",
+                    variant: "destructive",
+                })
+            }
+        })
     }
 }
 </script>

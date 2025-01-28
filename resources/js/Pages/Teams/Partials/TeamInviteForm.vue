@@ -1,10 +1,13 @@
 <script setup>
 import { useForm } from '@inertiajs/vue3'
+import { useToast } from '@/Components/ui/toast/use-toast'
 import { Button } from '@/Components/ui/button'
 import { Input } from '@/Components/ui/input'
 import { Label } from '@/Components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select'
 import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card'
+
+const { toast } = useToast()
 
 const props = defineProps({
     team: {
@@ -24,7 +27,20 @@ const form = useForm({
 
 const sendInvite = () => {
     form.post(route('team-invitations.store', props.team.id), {
-        onSuccess: () => form.reset()
+        onSuccess: () => {
+            form.reset()
+            toast({
+                title: "Invitation Sent",
+                description: `An invitation has been sent to ${form.email}`,
+            })
+        },
+        onError: () => {
+            toast({
+                title: "Error",
+                description: "Failed to send the invitation.",
+                variant: "destructive",
+            })
+        }
     })
 }
 </script>

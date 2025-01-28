@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import ThemeSwitcher from '@/Components/ThemeSwitcher.vue'
-import { Moon, Sun } from 'lucide-vue-next'
+import { Hash, Moon, Sun } from 'lucide-vue-next'
 
 import {
     Avatar,
@@ -73,16 +73,13 @@ import {
     User,
 } from 'lucide-vue-next'
 import SidebarGroupLabel from '@/Components/ui/sidebar/SidebarGroupLabel.vue';
+import Toaster from '@/Components/ui/toast/Toaster.vue';
+import Button from '@/Components/ui/button/Button.vue';
 
 const showingNavigationDropdown = ref(false);
 const $page = usePage()
 // You can expand this with more navigation items as needed
-const navItems = [
-    {
-        title: 'Dashboard',
-        url: route('dashboard'),
-        isActive: route().current('dashboard'),
-    },
+const teamItems = [
     {
         title: 'Settings',
         url: route('teams.edit', { team: $page.props.auth.user.current_team }),
@@ -162,9 +159,44 @@ const switchTeam = async (team) => {
 
             <SidebarContent>
                 <SidebarGroup>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton :class="{ 'bg-sidebar-accent': route().current('dashboard') }" as-child>
+                                <Link :href="route('dashboard')">
+                                <span>Dashboard</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarGroup>
+                <SidebarGroup>
+                    <SidebarGroupLabel class="flex justify-between w-full">
+                        Boards
+                        <Button class="size-6" variant="outline" size="icon">
+                            <Plus class="size-2"></Plus>
+                        </Button>
+                    </SidebarGroupLabel>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton as-child>
+                                <Link href="#">
+                                <Hash />
+                                <span>Board Title For Something</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton class="text-sidebar-foreground/70">
+                                <MoreHorizontal class="text-sidebar-foreground/70" />
+                                <span>More</span>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarGroup>
+                <SidebarGroup>
                     <SidebarGroupLabel>Team</SidebarGroupLabel>
                     <SidebarMenu>
-                        <SidebarMenuItem v-for="item in navItems" :key="item.title">
+                        <SidebarMenuItem v-for="item in teamItems" :key="item.title">
                             <SidebarMenuButton :class="{ 'bg-sidebar-accent': item.isActive }" as-child>
                                 <Link :href="item.url">
                                 <span>{{ item.title }}</span>
@@ -241,6 +273,7 @@ const switchTeam = async (team) => {
             <main class="flex-1 p-4 pt-0">
                 <slot />
             </main>
+            <Toaster></Toaster>
         </SidebarInset>
     </SidebarProvider>
 </template>

@@ -1,5 +1,6 @@
 <script setup>
 import { useForm } from '@inertiajs/vue3'
+import { useToast } from '@/Components/ui/toast/use-toast'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import TeamMemberList from './Partials/TeamMemberList.vue'
 import TeamInviteForm from './Partials/TeamInviteForm.vue'
@@ -8,6 +9,7 @@ import { Input } from '@/Components/ui/input'
 import { Label } from '@/Components/ui/label'
 import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card'
 
+const { toast } = useToast()
 const props = defineProps({
     team: {
         type: Object,
@@ -24,7 +26,21 @@ const form = useForm({
 })
 
 const updateTeam = () => {
-    form.put(route('teams.update', props.team.id))
+    form.put(route('teams.update', props.team.id), {
+        onSuccess: () => {
+            toast({
+                title: "Team Updated",
+                description: "Team settings have been saved successfully.",
+            })
+        },
+        onError: () => {
+            toast({
+                title: "Error",
+                description: "There was a problem updating the team.",
+                variant: "destructive",
+            })
+        }
+    })
 }
 </script>
 
