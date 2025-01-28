@@ -85,6 +85,11 @@ const teamItems = [
         url: route('teams.edit', { team: $page.props.auth.user.current_team }),
         isActive: route().current('teams.edit'),
     },
+    {
+        title: 'Templates',
+        url: route('templates.index'),
+        isActive: route().current('templates.index'),
+    },
     // Add more navigation items here
 ];
 
