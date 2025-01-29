@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Board;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -29,25 +30,27 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        return [
-            ...parent::share($request),
+        return array_merge(parent::share($request), [
             'auth' => [
                 'user' => $request->user() ? [
                     'id' => $request->user()->id,
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
-                    'teams' => $request->user()->teams,
                     'current_team' => $request->user()->currentTeam,
-                    'permissions' => $request->user()->getAllPermissions()
-                        ->pluck('name'),
-                    'roles' => $request->user()->roles
-                        ->pluck('name'),
+                    'teams' => $request->user()->teams,
                 ] : null,
             ],
+            'recent_boards' => $request->user()
+                ? Board::query()
+                    ->where('team_id', $request->user()->current_team_id)
+                    ->latest()
+                    ->take(10)
+                    ->get(['id', 'name'])
+                : [],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
             ],
-        ];
+        ]);
     }
 }

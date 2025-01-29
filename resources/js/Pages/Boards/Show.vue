@@ -1,40 +1,62 @@
 <script setup>
-import { Head, useForm } from '@inertiajs/vue3'
-import { onMounted, onUnmounted } from 'vue'
+import { Head, usePage } from '@inertiajs/vue3'
+import { useToast } from '@/Components/ui/toast/use-toast'
+import { onMounted, onUnmounted, ref } from 'vue'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
+import { Button } from '@/Components/ui/button'
+import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card'
+import { Textarea } from '@/Components/ui/textarea'
+import { ThumbsUp, Trash2 } from 'lucide-vue-next'
+import axios from 'axios'
 
 const props = defineProps({
-    board: Object,
-    auth: Object
+    board: {
+        type: Object,
+        required: true
+    },
 })
 
-const replyForm = useForm({
-    content: '',
-    column_id: null
-})
+const $page = usePage();
+
+const { toast } = useToast()
+
+// Create a map of column IDs to their reply content
+const replyContents = ref({})
+const isSubmitting = ref(false)
 
 let echo = null
 
 onMounted(() => {
+    // Initialize empty content for each column
+    props.board.columns.forEach(column => {
+        replyContents.value[column.id] = ''
+    })
+
     echo = window.Echo.join(`board.${props.board.id}`)
         .here((users) => {
             console.log('Present users:', users)
         })
         .joining((user) => {
-            console.log('User joined:', user)
+            toast({
+                title: "User Joined",
+                description: `${user.name} joined the board`,
+            })
         })
         .leaving((user) => {
-            console.log('User left:', user)
+            toast({
+                title: "User Left",
+                description: `${user.name} left the board`,
+            })
         })
         .listen('ReplyCreated', (e) => {
             const column = props.board.columns.find(c => c.id === e.reply.column_id)
             if (column) {
-                column.replies.push(e.reply)
+                column.replies.unshift(e.reply)
             }
         })
         .listen('ReplyDeleted', (e) => {
             props.board.columns.forEach(column => {
-                const index = column.replies.findIndex(r => r.id === e.replyId)
+                const index = column.replies.findIndex(r => r.id == e.reply)
                 if (index !== -1) {
                     column.replies.splice(index, 1)
                 }
@@ -52,25 +74,41 @@ onMounted(() => {
 
 onUnmounted(() => {
     if (echo) {
-        echo.leaveChannel()
+        window.Echo.leave(`board.${props.board.id}`)
     }
 })
 
 const submitReply = async (columnId) => {
+    if (isSubmitting.value || !replyContents.value[columnId]) return
+
+    isSubmitting.value = true
     try {
         const response = await axios.post(route('replies.store'), {
-            content: replyForm.content,
+            content: replyContents.value[columnId],
             column_id: columnId
         })
 
+        // Add the new reply to the top of the column
         const column = props.board.columns.find(c => c.id === columnId)
         if (column) {
-            column.replies.push(response.data.reply)
+            column.replies.unshift(response.data.reply)
         }
 
-        replyForm.reset()
+        // Clear the input
+        replyContents.value[columnId] = ''
+
+        toast({
+            title: "Reply Added",
+            description: "Your reply has been added successfully.",
+        })
     } catch (error) {
-        console.error('Error submitting reply:', error)
+        toast({
+            title: "Error",
+            description: error.response?.data?.message || "Failed to add reply.",
+            variant: "destructive",
+        })
+    } finally {
+        isSubmitting.value = false
     }
 }
 
@@ -80,14 +118,24 @@ const deleteReply = async (replyId) => {
     try {
         await axios.delete(route('replies.destroy', replyId))
 
+        // Remove the reply locally
         props.board.columns.forEach(column => {
             const index = column.replies.findIndex(r => r.id === replyId)
             if (index !== -1) {
                 column.replies.splice(index, 1)
             }
         })
+
+        toast({
+            title: "Reply Deleted",
+            description: "Reply has been deleted successfully.",
+        })
     } catch (error) {
-        console.error('Error deleting reply:', error)
+        toast({
+            title: "Error",
+            description: "Failed to delete reply.",
+            variant: "destructive",
+        })
     }
 }
 
@@ -95,6 +143,7 @@ const toggleVote = async (replyId) => {
     try {
         const response = await axios.post(route('replies.votes.store', replyId))
 
+        // Update the votes locally
         props.board.columns.forEach(column => {
             const reply = column.replies.find(r => r.id === replyId)
             if (reply) {
@@ -102,13 +151,17 @@ const toggleVote = async (replyId) => {
             }
         })
     } catch (error) {
-        console.error('Error toggling vote:', error)
+        toast({
+            title: "Error",
+            description: "Failed to update vote.",
+            variant: "destructive",
+        })
     }
 }
 
 const canDeleteReply = (reply) => {
-    return props.auth.user.id === reply.user_id ||
-        props.auth.user.id === props.board.owner_id
+    return $page.props.auth.user.id === reply.user_id ||
+        $page.props.auth.user.id === props.board.owner_id
 }
 </script>
 
@@ -118,7 +171,7 @@ const canDeleteReply = (reply) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
+            <h2 class="text-xl font-semibold leading-tight">
                 {{ board.name }}
             </h2>
         </template>
@@ -126,47 +179,44 @@ const canDeleteReply = (reply) => {
         <div class="py-12">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
                 <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-                    <div v-for="column in board.columns" :key="column.id"
-                        class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                        <div class="p-6">
-                            <h3 class="mb-4 text-lg font-semibold">{{ column.name }}</h3>
-
-                            <!-- Replies -->
-                            <div class="space-y-4">
-                                <div v-for="reply in column.replies" :key="reply.id" class="p-4 rounded bg-gray-50">
-                                    <div class="flex justify-between">
-                                        <span class="text-sm text-gray-600">
-                                            {{ reply.user.name }}
-                                        </span>
-                                        <button v-if="canDeleteReply(reply)" @click="deleteReply(reply.id)"
-                                            class="text-sm text-red-600">
-                                            Delete
-                                        </button>
-                                    </div>
-                                    <p class="mt-2">{{ reply.content }}</p>
-                                    <div class="flex items-center mt-2">
-                                        <button @click="toggleVote(reply.id)"
-                                            :class="{ 'text-blue-600': reply.votes.some(vote => vote.user_id === auth.user.id) }"
-                                            class="flex items-center space-x-1">
-                                            <span>👍</span>
-                                            <span>{{ reply.votes.length }}</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Reply Form -->
-                            <form @submit.prevent="submitReply(column.id)" class="mt-4">
-                                <textarea v-model="replyForm.content" :disabled="board.locked_at"
-                                    class="w-full border-gray-300 rounded-md shadow-sm" rows="3"
-                                    placeholder="Add a reply..."></textarea>
-                                <button :disabled="board.locked_at || replyForm.processing" type="submit"
-                                    class="px-4 py-2 mt-2 text-white bg-blue-500 rounded disabled:opacity-50">
+                    <Card v-for="column in board.columns" :key="column.id">
+                        <CardHeader>
+                            <CardTitle>{{ column.name }}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <form @submit.prevent="submitReply(column.id)" class="mb-4">
+                                <Textarea v-model="replyContents[column.id]" :disabled="board.locked_at"
+                                    placeholder="Add a reply..." class="mb-2" />
+                                <Button type="submit" class="w-full">
                                     Add Reply
-                                </button>
+                                </Button>
                             </form>
-                        </div>
-                    </div>
+
+                            <div class="space-y-4">
+                                <Card v-for="reply in column.replies" :key="reply.id" variant="secondary">
+                                    <CardContent class="p-4">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-sm text-muted-foreground">
+                                                {{ reply.user.name }}
+                                            </span>
+                                            <Button v-if="canDeleteReply(reply)" variant="ghost" size="icon"
+                                                @click="deleteReply(reply.id)">
+                                                <Trash2 class="size-4 text-destructive" />
+                                            </Button>
+                                        </div>
+                                        <p class="mt-2">{{ reply.content }}</p>
+                                        <div class="flex items-center mt-2">
+                                            <Button variant="ghost" size="sm" @click="toggleVote(reply.id)"
+                                                :class="{ 'text-primary': reply.votes.some(vote => vote.user_id === $page.props.auth.user.id) }">
+                                                <ThumbsUp class="mr-2 size-4" />
+                                                {{ reply.votes.length }}
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         </div>

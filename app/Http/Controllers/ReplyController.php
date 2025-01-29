@@ -26,7 +26,7 @@ class ReplyController extends Controller
             'user_id' => $request->user()->id,
         ]);
 
-        $reply->load('user');
+        $reply->load(['user', 'votes']);
         broadcast(new ReplyCreated($reply, $column->board))->toOthers();
 
         return response()->json(['reply' => $reply], 201);

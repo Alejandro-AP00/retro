@@ -177,23 +177,28 @@ const switchTeam = async (team) => {
                 <SidebarGroup>
                     <SidebarGroupLabel class="flex justify-between w-full">
                         Boards
-                        <Button class="size-6" variant="outline" size="icon">
+                        <Button class="size-6" variant="outline" size="icon" as-child>
+                            <Link :href="route('boards.create')">
                             <Plus class="size-2"></Plus>
+                            </Link>
                         </Button>
                     </SidebarGroupLabel>
                     <SidebarMenu>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton as-child>
-                                <Link href="#">
-                                <Hash />
-                                <span>Board Title For Something</span>
+                        <SidebarMenuItem v-for="board in $page.props.recent_boards" :key="board.id">
+                            <SidebarMenuButton
+                                :class="{ 'bg-sidebar-accent': route().current('boards.show', board.id) }" as-child>
+                                <Link :href="route('boards.show', board.id)">
+                                <Hash class="size-4" />
+                                <span class="truncate">{{ board.name }}</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                         <SidebarMenuItem>
-                            <SidebarMenuButton class="text-sidebar-foreground/70">
+                            <SidebarMenuButton class="text-sidebar-foreground/70" as-child>
+                                <Link :href="route('boards.index')">
                                 <MoreHorizontal class="text-sidebar-foreground/70" />
                                 <span>More</span>
+                                </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                     </SidebarMenu>

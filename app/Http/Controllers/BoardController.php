@@ -35,7 +35,7 @@ class BoardController extends Controller
         }
 
         return Inertia::render('Boards/Show', [
-            'board' => $board->load('columns.replies.user')
+            'board' => $board->load(['columns.replies.user', 'columns.replies.votes'])
         ]);
     }
 
