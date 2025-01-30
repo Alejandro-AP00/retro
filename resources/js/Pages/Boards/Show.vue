@@ -1,12 +1,13 @@
 <script setup>
-import { Head, usePage } from '@inertiajs/vue3'
+import { Head, usePage, Link } from '@inertiajs/vue3'
 import { useToast } from '@/Components/ui/toast/use-toast'
 import { onMounted, onUnmounted, ref } from 'vue'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { Button } from '@/Components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card'
 import { Textarea } from '@/Components/ui/textarea'
-import { ThumbsUp, Trash2 } from 'lucide-vue-next'
+import { ThumbsUp, Trash2, CheckCircle2, Edit, Lock } from 'lucide-vue-next'
+import { VueDraggable } from 'vue-draggable-plus'
 import axios from 'axios'
 
 const props = defineProps({
@@ -16,18 +17,14 @@ const props = defineProps({
     },
 })
 
-const $page = usePage();
-
+const $page = usePage()
 const { toast } = useToast()
-
-// Create a map of column IDs to their reply content
 const replyContents = ref({})
 const isSubmitting = ref(false)
 
 let echo = null
 
 onMounted(() => {
-    // Initialize empty content for each column
     props.board.columns.forEach(column => {
         replyContents.value[column.id] = ''
     })
@@ -70,6 +67,22 @@ onMounted(() => {
                 }
             })
         })
+        .listen('ReplyMoved', (e) => {
+            // Remove from old column
+            const oldColumn = props.board.columns.find(c => c.id === e.oldColumnId)
+            if (oldColumn) {
+                const index = oldColumn.replies.findIndex(r => r.id === e.reply.id)
+                if (index !== -1) {
+                    oldColumn.replies.splice(index, 1)
+                }
+            }
+
+            // Add to new column at correct position
+            const newColumn = props.board.columns.find(c => c.id === e.newColumnId)
+            if (newColumn) {
+                newColumn.replies.splice(e.newOrder, 0, e.reply)
+            }
+        })
 })
 
 onUnmounted(() => {
@@ -77,6 +90,45 @@ onUnmounted(() => {
         window.Echo.leave(`board.${props.board.id}`)
     }
 })
+
+const handleReplyMove = async (event, columnId) => {
+    await updateReplyPosition(event.data.id, columnId, event.newIndex)
+    try {
+        await axios.post(route('replies.position.update', { reply: event.data.id }), {
+            columnId,
+            order: event.newIndex
+        })
+    } catch (error) {
+        console.log(error);
+
+        toast({
+            title: "Error",
+            description: "Failed to update reply position.",
+            variant: "destructive",
+        })
+    }
+}
+
+const markAsRead = async (reply) => {
+    try {
+        const response = await axios.post(route('replies.read.store', reply.id))
+
+        props.board.columns.forEach(column => {
+            const updatedReply = column.replies.find(r => r.id === reply.id)
+            if (updatedReply) {
+                updatedReply.is_read = response.data.is_read
+            }
+        })
+    } catch (error) {
+        console.log(error);
+
+        toast({
+            title: "Error",
+            description: "Failed to mark reply as read.",
+            variant: "destructive",
+        })
+    }
+}
 
 const submitReply = async (columnId) => {
     if (isSubmitting.value || !replyContents.value[columnId]) return
@@ -163,6 +215,10 @@ const canDeleteReply = (reply) => {
     return $page.props.auth.user.id === reply.user_id ||
         $page.props.auth.user.id === props.board.owner_id
 }
+
+const isReplyRead = (reply) => {
+    return reply.is_read
+}
 </script>
 
 <template>
@@ -171,9 +227,20 @@ const canDeleteReply = (reply) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight">
-                {{ board.name }}
-            </h2>
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold leading-tight">
+                    {{ board.name }}
+                    <span v-if="board.locked_at" class="ml-2 text-muted-foreground">
+                        <Lock class="inline-block size-4" />
+                    </span>
+                </h2>
+                <div class="flex items-center gap-2">
+                    <Button variant="outline">
+                        <Edit class="mr-2 size-4" />
+                        Edit Board
+                    </Button>
+                </div>
+            </div>
         </template>
 
         <div class="py-12">
@@ -187,22 +254,33 @@ const canDeleteReply = (reply) => {
                             <form @submit.prevent="submitReply(column.id)" class="mb-4">
                                 <Textarea v-model="replyContents[column.id]" :disabled="board.locked_at"
                                     placeholder="Add a reply..." class="mb-2" />
-                                <Button type="submit" class="w-full">
+                                <Button type="submit"
+                                    :disabled="board.locked_at || isSubmitting || !replyContents[column.id]"
+                                    class="w-full">
                                     Add Reply
                                 </Button>
                             </form>
 
-                            <div class="space-y-4">
-                                <Card v-for="reply in column.replies" :key="reply.id" variant="secondary">
+                            <VueDraggable v-model="column.replies" group="replies"
+                                @update="(e) => handleReplyMove(e, column.id)"
+                                @add="(e) => handleReplyMove(e, column.id)" :disabled="board.locked_at"
+                                class="w-full space-y-4 min-h-32">
+                                <Card v-for="reply in column.replies" :key="reply.id" variant="secondary"
+                                    :class="{ 'border-primary': !isReplyRead(reply) }">
                                     <CardContent class="p-4">
                                         <div class="flex items-center justify-between">
                                             <span class="text-sm text-muted-foreground">
                                                 {{ reply.user.name }}
                                             </span>
-                                            <Button v-if="canDeleteReply(reply)" variant="ghost" size="icon"
-                                                @click="deleteReply(reply.id)">
-                                                <Trash2 class="size-4 text-destructive" />
-                                            </Button>
+                                            <div class="flex items-center gap-2">
+                                                <Button variant="ghost" size="icon" @click="markAsRead(reply)">
+                                                    <CheckCircle2 class="size-4" />
+                                                </Button>
+                                                <Button v-if="canDeleteReply(reply)" variant="ghost" size="icon"
+                                                    @click="deleteReply(reply.id)">
+                                                    <Trash2 class="size-4 text-destructive" />
+                                                </Button>
+                                            </div>
                                         </div>
                                         <p class="mt-2">{{ reply.content }}</p>
                                         <div class="flex items-center mt-2">
@@ -214,7 +292,7 @@ const canDeleteReply = (reply) => {
                                         </div>
                                     </CardContent>
                                 </Card>
-                            </div>
+                            </VueDraggable>
                         </CardContent>
                     </Card>
                 </div>

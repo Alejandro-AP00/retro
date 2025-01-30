@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Events\ReplyCreated;
 use App\Events\ReplyDeleted;
+use App\Events\ReplyMoved;
 use App\Models\User;
 use App\Models\Board;
 use App\Models\Column;
@@ -188,5 +189,64 @@ class ReplyTest extends TestCase
         $this->assertDatabaseHas('replies', ['id' => $reply->id]);
 
         Event::assertNotDispatched(ReplyDeleted::class);
+    }
+
+    public function test_user_can_move_reply()
+    {
+        Event::fake([ReplyMoved::class]);
+
+        $reply = Reply::factory()->create([
+            'column_id' => $this->column->id,
+            'user_id' => $this->user->id
+        ]);
+
+        $newColumn = Column::factory()->create(['board_id' => $this->board->id]);
+
+        $response = $this->actingAs($this->user)
+            ->postJson(route('replies.position.update'), [
+                'replyId' => $reply->id,
+                'columnId' => $newColumn->id,
+                'order' => 0
+            ]);
+
+        $response->assertOk();
+        $this->assertEquals($newColumn->id, $reply->fresh()->column_id);
+        Event::assertDispatched(ReplyMoved::class);
+    }
+
+    public function test_user_can_mark_reply_as_read()
+    {
+        $reply = Reply::factory()->create([
+            'column_id' => $this->column->id,
+            'user_id' => $this->user->id,
+            'is_read' => false,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->postJson(route('replies.read', $reply->id));
+
+        $response->assertOk();
+        $this->assertTrue($reply->fresh()->is_read);
+    }
+
+    public function test_user_cannot_move_reply_in_locked_board()
+    {
+        $this->board->update(['locked_at' => now()]);
+
+        $reply = Reply::factory()->create([
+            'column_id' => $this->column->id,
+            'user_id' => $this->user->id
+        ]);
+
+        $newColumn = Column::factory()->create(['board_id' => $this->board->id]);
+
+        $response = $this->actingAs($this->user)
+            ->postJson(route('replies.position.update'), [
+                'replyId' => $reply->id,
+                'columnId' => $newColumn->id,
+                'order' => 0
+            ]);
+
+        $response->assertForbidden();
     }
 }

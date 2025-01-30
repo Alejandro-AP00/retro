@@ -21,6 +21,18 @@ class ReplyPolicy
                !$reply->column->board->isLocked();
     }
 
+    public function toggleRead(User $user, Reply $reply): bool
+    {
+        return $user->belongsToTeam($reply->column->board->team) &&
+               !$reply->column->board->isLocked();
+    }
+
+    public function update(User $user, Reply $reply): bool
+    {
+        return $user->belongsToTeam($reply->column->board->team) &&
+               !$reply->column->board->isLocked();
+    }
+
     public function delete(User $user, Reply $reply): bool
     {
         if (!$user->belongsToTeam($reply->column->board->team)) {

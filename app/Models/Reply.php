@@ -9,7 +9,11 @@ class Reply extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['content', 'column_id', 'user_id'];
+    protected $fillable = ['content', 'user_id', 'column_id', 'order_by', 'is_read'];
+
+    protected $casts = [
+        'is_read' => 'bool'
+    ];
 
     public function user()
     {
@@ -23,11 +27,6 @@ class Reply extends Model
 
     public function votes()
     {
-        return $this->hasMany(ReplyVote::class);
-    }
-
-    public function voters()
-    {
-        return $this->belongsToMany(User::class, 'reply_votes');
+        return $this->belongsToMany(User::class, 'reply_votes')->withTimestamps();
     }
 }

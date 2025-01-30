@@ -9,6 +9,8 @@ use App\Http\Controllers\BoardController;
 use App\Http\Controllers\ReplyController;
 use App\Http\Controllers\ReplyVoteController;
 use App\Http\Controllers\CurrentTeamController;
+use App\Http\Controllers\ReplyPositionController;
+use App\Http\Controllers\ReplyReadController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TeamInvitationController;
 use App\Http\Controllers\TeamMemberController;
@@ -44,6 +46,10 @@ Route::middleware('auth')->group(function () {
 
     Route::post('replies/{reply}/votes', [ReplyVoteController::class, 'store'])
         ->name('replies.votes.store');
+    Route::post('replies/{reply}/read', [ReplyReadController::class, 'store'])
+        ->name('replies.read.store');
+    Route::post('replies/{reply}/moved', [ReplyPositionController::class, 'update'])
+        ->name('replies.position.update');
 
     Route::put('/current-team', [CurrentTeamController::class, 'update'])
         ->name('current-team.update');

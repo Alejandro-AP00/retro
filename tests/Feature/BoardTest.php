@@ -243,4 +243,63 @@ class BoardTest extends TestCase
 
         $response->assertSessionHasErrors(['board_template_id']);
     }
+
+    public function test_user_can_create_private_board()
+    {
+        $response = $this->actingAs($this->user)
+            ->post(route('boards.store'), [
+                'name' => 'Test Board',
+                'description' => 'Test Description',
+                'is_private' => true,
+                'users' => [$this->user->id]
+            ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('boards', [
+            'name' => 'Test Board',
+            'is_private' => true
+        ]);
+
+        $board = Board::latest()->first();
+        $this->assertTrue($board->users->contains($this->user));
+    }
+
+    public function test_user_can_update_board_access()
+    {
+        $board = Board::factory()
+            ->forTeam($this->team)
+            ->create(['owner_id' => $this->user->id]);
+
+        $newUser = User::factory()->create();
+        $this->team->users()->attach($newUser);
+
+        $response = $this->actingAs($this->user)
+            ->put(route('boards.update', $board), [
+                'name' => $board->name,
+                'description' => $board->description,
+                'is_private' => true,
+                'users' => [$newUser->id]
+            ]);
+
+        $response->assertRedirect();
+        $this->assertTrue($board->fresh()->users->contains($newUser));
+    }
+
+    public function test_unauthorized_user_cannot_access_private_board()
+    {
+        $board = Board::factory()
+            ->forTeam($this->team)
+            ->create([
+                'owner_id' => $this->user->id,
+                'is_private' => true
+            ]);
+
+        $unauthorizedUser = User::factory()->create();
+        $this->team->users()->attach($unauthorizedUser);
+
+        $response = $this->actingAs($unauthorizedUser)
+            ->get(route('boards.show', $board));
+
+        $response->assertForbidden();
+    }
 }

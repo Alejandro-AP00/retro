@@ -48,28 +48,10 @@ import {
 } from '@/Components/ui/sidebar'
 
 import {
-    AudioWaveform,
-    BadgeCheck,
-    Bell,
-    BookOpen,
-    Bot,
-    ChevronRight,
     ChevronsUpDown,
-    Command,
-    CreditCard,
-    Folder,
-    Forward,
-    Frame,
-    GalleryVerticalEnd,
     LogOut,
-    Map,
     MoreHorizontal,
-    PieChart,
     Plus,
-    Settings2,
-    Sparkles,
-    SquareTerminal,
-    Trash2,
     User,
 } from 'lucide-vue-next'
 import SidebarGroupLabel from '@/Components/ui/sidebar/SidebarGroupLabel.vue';
