@@ -53,6 +53,8 @@ import {
     MoreHorizontal,
     Plus,
     User,
+    Settings2,
+    SquareDashedKanban
 } from 'lucide-vue-next'
 import SidebarGroupLabel from '@/Components/ui/sidebar/SidebarGroupLabel.vue';
 import Toaster from '@/Components/ui/toast/Toaster.vue';
@@ -66,11 +68,13 @@ const teamItems = [
         title: 'Settings',
         url: route('teams.edit', { team: $page.props.auth.user.current_team }),
         isActive: route().current('teams.edit'),
+        icon: Settings2,
     },
     {
         title: 'Templates',
         url: route('templates.index'),
         isActive: route().current('templates.index'),
+        icon: SquareDashedKanban,
     },
     // Add more navigation items here
 ];
@@ -191,6 +195,7 @@ const switchTeam = async (team) => {
                         <SidebarMenuItem v-for="item in teamItems" :key="item.title">
                             <SidebarMenuButton :class="{ 'bg-sidebar-accent': item.isActive }" as-child>
                                 <Link :href="item.url">
+                                <component :is="item.icon"></component>
                                 <span>{{ item.title }}</span>
                                 </Link>
                             </SidebarMenuButton>
@@ -207,6 +212,7 @@ const switchTeam = async (team) => {
                                 <SidebarMenuButton size="lg"
                                     class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
                                     <Avatar>
+                                        <AvatarImage :src="$page.props.auth.user.avatar" alt="@radix-vue" />
                                         <AvatarFallback>
                                             {{ $page.props.auth.user.name.charAt(0) }}
                                         </AvatarFallback>
@@ -244,25 +250,17 @@ const switchTeam = async (team) => {
         </Sidebar>
 
         <SidebarInset>
-            <header class="flex items-center h-16 gap-2 shrink-0">
+            <header class="flex items-center h-16 gap-2 border-b shrink-0">
                 <div class="flex items-center w-full gap-2 px-4">
                     <SidebarTrigger class="-ml-1" />
                     <Separator orientation="vertical" class="h-4 mr-2" />
-                    <Breadcrumb v-if="$slots.header">
-                        <BreadcrumbList>
-                            <BreadcrumbItem>
-                                <BreadcrumbPage>
-                                    <slot name="header" />
-                                </BreadcrumbPage>
-                            </BreadcrumbItem>
-                        </BreadcrumbList>
-                    </Breadcrumb>
+                    <slot name="header" />
                     <ThemeSwitcher class="ml-auto" />
                 </div>
             </header>
 
             <!-- Page Content -->
-            <main class="flex-1 p-4 pt-0">
+            <main class="flex-1 p-4">
                 <slot />
             </main>
             <Toaster></Toaster>

@@ -37,6 +37,10 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected $appends = [
+        'avatar'
+    ];
+
     /**
      * Get the attributes that should be cast.
      *
@@ -48,6 +52,11 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function getAvatarAttribute(): string
+    {
+        return 'https://hostedboringavatars.vercel.app/api/bunhaus?name=' . urlencode($this->name);
     }
 
     /**
