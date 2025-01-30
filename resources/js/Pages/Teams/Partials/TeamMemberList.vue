@@ -1,10 +1,11 @@
 <script setup>
-import { useForm } from '@inertiajs/vue3'
+import { useForm, usePage } from '@inertiajs/vue3'
 import { useToast } from '@/Components/ui/toast/use-toast'
 import { Button } from '@/Components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select'
 import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card'
 import Badge from '@/Components/ui/badge/Badge.vue'
+import { formatTitle } from 'usemods'
 
 const props = defineProps({
     team: {
@@ -22,6 +23,8 @@ const { toast } = useToast()
 const updateRoleForm = useForm({
     role: ''
 })
+
+const $page = usePage()
 
 const updateRole = (userId) => {
     updateRoleForm.put(route('team-members.update', [props.team.id, userId]), {
@@ -74,25 +77,26 @@ const removeMember = (userId) => {
                 <li v-for="user in team.users" :key="user.id" class="py-4">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="font-medium">{{ user.name }} <Badge>{{ user.roles[0].name }}</Badge>
+                            <p class="font-medium">{{ user.name }} <Badge class="ml-2">{{
+                                formatTitle(user.roles[0].name) }}</Badge>
                             </p>
                             <p class="text-sm text-muted-foreground">{{ user.email }}</p>
                         </div>
 
                         <div class="flex items-center space-x-4">
-                            <Select v-if="user.id !== team.owner_id" v-model="updateRoleForm.role"
+                            <Select v-if="user.id !== $page.props.auth.user.id" v-model="updateRoleForm.role"
                                 @update:modelValue="updateRole(user.id)">
                                 <SelectTrigger>
-                                    <SelectValue :placeholder="user.role" />
+                                    <SelectValue :placeholder="formatTitle(user.role)" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem v-for="role in availableRoles" :key="role.id" :value="role.name">
-                                        {{ role.name }}
+                                        {{ formatTitle(role.name) }}
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
 
-                            <Button v-if="user.id !== team.owner_id" variant="destructive"
+                            <Button v-if="user.id !== $page.props.auth.user.id" variant="destructive"
                                 @click="removeMember(user.id)">
                                 Remove
                             </Button>

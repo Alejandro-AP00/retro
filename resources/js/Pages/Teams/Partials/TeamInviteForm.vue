@@ -6,6 +6,7 @@ import { Input } from '@/Components/ui/input'
 import { Label } from '@/Components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select'
 import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card'
+import { formatTitle } from 'usemods'
 
 const { toast } = useToast()
 
@@ -65,7 +66,7 @@ const sendInvite = () => {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem v-for="role in availableRoles" :key="role.id" :value="role.name">
-                                {{ role.name }}
+                                {{ formatTitle(role.name) }}
                             </SelectItem>
                         </SelectContent>
                     </Select>

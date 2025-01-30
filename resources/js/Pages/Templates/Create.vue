@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3'
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { Button } from '@/Components/ui/button'
 import { Input } from '@/Components/ui/input'
@@ -19,6 +19,7 @@ import { useToast } from '@/Components/ui/toast'
 import ColumnEditor from '@/Components/ColumnEditor.vue'
 
 const { toast } = useToast()
+const $page = usePage();
 
 const form = useForm({
     name: '',
@@ -52,7 +53,13 @@ const submit = () => {
         <template #header>
             <Breadcrumb>
                 <BreadcrumbList>
-                    <BreadcrumbItem class="hidden md:block">
+                    <BreadcrumbItem>
+                        <BreadcrumbLink>
+                            {{ $page.props.auth.user.current_team.name }}
+                        </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
                         <BreadcrumbLink as-child>
                             <Link :href="route('templates.index')">
                             Templates
@@ -66,35 +73,38 @@ const submit = () => {
                 </BreadcrumbList>
             </Breadcrumb>
         </template>
-
-        <div class="flex flex-col justify-between mb-4 space-y-6 lg:flex-row lg:items-center lg:space-y-2">
-            <h2 class="text-3xl font-semibold tracking-tight">Templates</h2>
-            <div class="flex items-center">
-                <Button variant="default" type="submit" @click="submit" :disable="form.processing">
-                    Create
-                </Button>
+        <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div class="flex flex-col justify-between mb-4 space-y-6 lg:flex-row lg:items-center lg:space-y-2">
+                <h2 class="text-3xl font-semibold tracking-tight">Templates</h2>
+                <div class="flex items-center">
+                    <Button variant="default" type="submit" @click="submit" :disable="form.processing">
+                        Create
+                    </Button>
+                </div>
             </div>
-        </div>
-        <Card>
-            <CardContent class="p-6">
-                <form @submit.prevent="submit" class="space-y-6">
-                    <div class="space-y-2">
-                        <Label for="name">Name</Label>
-                        <Input id="name" v-model="form.name" :class="{ 'border-destructive': form.errors?.name }" />
-                        <small v-if="form.errors?.name" class="text-destructive-text">{{ form.errors?.name }}</small>
-                    </div>
+            <Card>
+                <CardContent class="p-6">
+                    <form @submit.prevent="submit" class="space-y-6">
+                        <div class="space-y-2">
+                            <Label for="name">Name</Label>
+                            <Input id="name" v-model="form.name" :class="{ 'border-destructive': form.errors?.name }" />
+                            <small v-if="form.errors?.name" class="text-destructive-text">{{ form.errors?.name
+                                }}</small>
+                        </div>
 
-                    <div class="space-y-2">
-                        <Label for="description">Description</Label>
-                        <Textarea id="description" v-model="form.description"
-                            :class="{ 'border-destructive': form.errors?.description }" />
-                        <small v-if="form.errors?.description" class="text-destructive-text">{{ form.errors?.description
+                        <div class="space-y-2">
+                            <Label for="description">Description</Label>
+                            <Textarea id="description" v-model="form.description"
+                                :class="{ 'border-destructive': form.errors?.description }" />
+                            <small v-if="form.errors?.description" class="text-destructive-text">{{
+                                form.errors?.description
                             }}</small>
-                    </div>
+                        </div>
 
-                    <ColumnEditor v-model:columns="form.columns" :errors="form.errors"></ColumnEditor>
-                </form>
-            </CardContent>
-        </Card>
+                        <ColumnEditor v-model:columns="form.columns" :errors="form.errors"></ColumnEditor>
+                    </form>
+                </CardContent>
+            </Card>
+        </div>
     </AuthenticatedLayout>
 </template>

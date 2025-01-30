@@ -33,6 +33,7 @@
     "pusher-js": "^8.4.0-rc2",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "usemods": "^1.9.0",
     "v-calendar": "^3.1.2",
     "vaul-vue": "^0.2.0",
     "vee-validate": "^4.15.0",
