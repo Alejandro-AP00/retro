@@ -6,9 +6,33 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { Button } from '@/Components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card'
 import { Textarea } from '@/Components/ui/textarea'
-import { ThumbsUp, Trash2, CheckCircle2, Edit, Lock } from 'lucide-vue-next'
+import { ThumbsUp, Trash2, CheckCircle2, Edit, Lock, BookCheck, Ellipsis } from 'lucide-vue-next'
 import { VueDraggable } from 'vue-draggable-plus'
+import {
+    Avatar,
+    AvatarFallback,
+    AvatarImage,
+} from '@/Components/ui/avatar'
+
 import axios from 'axios'
+import { Badge } from '@/Components/ui/badge'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/Components/ui/dropdown-menu'
+import {
+    Breadcrumb,
+    BreadcrumbEllipsis,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from '@/Components/ui/breadcrumb'
 
 const props = defineProps({
     board: {
@@ -92,7 +116,6 @@ onUnmounted(() => {
 })
 
 const handleReplyMove = async (event, columnId) => {
-    await updateReplyPosition(event.data.id, columnId, event.newIndex)
     try {
         await axios.post(route('replies.position.update', { reply: event.data.id }), {
             columnId,
@@ -227,33 +250,49 @@ const isReplyRead = (reply) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight">
-                    {{ board.name }}
-                    <span v-if="board.locked_at" class="ml-2 text-muted-foreground">
-                        <Lock class="inline-block size-4" />
-                    </span>
-                </h2>
-                <div class="flex items-center gap-2">
-                    <Button variant="outline">
-                        <Edit class="mr-2 size-4" />
-                        Edit Board
-                    </Button>
-                </div>
-            </div>
+            <Breadcrumb>
+                <BreadcrumbList>
+                    <BreadcrumbItem>
+                        <BreadcrumbLink>
+                            {{ $page.props.auth.user.current_team.name }}
+                        </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                        <BreadcrumbLink as-child>
+                            <Link :href="route('templates.index')">
+                            Boards
+                            </Link>
+                        </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                        <BreadcrumbPage class="flex items-center gap-2">
+                            {{ board.name }}
+                            <Button size="icon" variant="ghost">
+                                <Edit class="size-4" />
+                            </Button>
+                        </BreadcrumbPage>
+                    </BreadcrumbItem>
+                </BreadcrumbList>
+            </Breadcrumb>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-                    <Card v-for="column in board.columns" :key="column.id">
-                        <CardHeader>
-                            <CardTitle>{{ column.name }}</CardTitle>
+        <div class="h-full">
+            <div class="h-full mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <div class="grid h-full grid-cols-1 gap-6 md:grid-cols-3">
+                    <Card v-for="column in board.columns" :key="column.id" class="flex flex-col">
+                        <CardHeader class="flex flex-row items-center p-4">
+                            <CardTitle class="text-xl ">{{ column.name }}</CardTitle>
+                            <Button class="ml-2" size="icon" variant="ghost">
+                                <Edit class="size-4" />
+                            </Button>
+                            <Badge class="ml-auto" variant="secondary">{{ column.replies.length }}</Badge>
                         </CardHeader>
-                        <CardContent>
-                            <form @submit.prevent="submitReply(column.id)" class="mb-4">
+                        <CardContent class="flex-1 px-4">
+                            <form @submit.prevent="submitReply(column.id)" class="mb-12">
                                 <Textarea v-model="replyContents[column.id]" :disabled="board.locked_at"
-                                    placeholder="Add a reply..." class="mb-2" />
+                                    placeholder="Add a reply..." class="mb-2 resize-none" />
                                 <Button type="submit"
                                     :disabled="board.locked_at || isSubmitting || !replyContents[column.id]"
                                     class="w-full">
@@ -264,29 +303,48 @@ const isReplyRead = (reply) => {
                             <VueDraggable v-model="column.replies" group="replies"
                                 @update="(e) => handleReplyMove(e, column.id)"
                                 @add="(e) => handleReplyMove(e, column.id)" :disabled="board.locked_at"
-                                class="w-full space-y-4 min-h-32">
+                                class="w-full h-full space-y-4 min-h-32">
                                 <Card v-for="reply in column.replies" :key="reply.id" variant="secondary"
-                                    :class="{ 'border-primary': !isReplyRead(reply) }">
-                                    <CardContent class="p-4">
-                                        <div class="flex items-center justify-between">
+                                    :class="{ 'bg-green-950/25': isReplyRead(reply) }">
+                                    <CardContent class="p-0">
+                                        <div class="flex items-center pl-3 border-b">
+                                            <Avatar class="mr-2 size-4">
+                                                <AvatarImage :src="$page.props.auth.user.avatar" alt="@radix-vue" />
+                                                <AvatarFallback>
+                                                    {{ $page.props.auth.user.name.charAt(0) }}
+                                                </AvatarFallback>
+                                            </Avatar>
                                             <span class="text-sm text-muted-foreground">
                                                 {{ reply.user.name }}
                                             </span>
-                                            <div class="flex items-center gap-2">
-                                                <Button variant="ghost" size="icon" @click="markAsRead(reply)">
-                                                    <CheckCircle2 class="size-4" />
-                                                </Button>
-                                                <Button v-if="canDeleteReply(reply)" variant="ghost" size="icon"
-                                                    @click="deleteReply(reply.id)">
-                                                    <Trash2 class="size-4 text-destructive" />
-                                                </Button>
-                                            </div>
+                                            <span v-if="isReplyRead(reply)"
+                                                class="px-2 ml-2 text-sm text-white bg-green-600 rounded dark:text-green-400 dark:bg-green-950">
+                                                Read
+                                            </span>
+                                            <Button class="ml-auto" variant="ghost" size="icon"
+                                                @click="markAsRead(reply)">
+                                                <BookCheck />
+                                            </Button>
+                                            <DropdownMenu v-if="canDeleteReply(reply)">
+                                                <DropdownMenuTrigger as-child>
+                                                    <Button variant="ghost" size="icon">
+                                                        <Ellipsis />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent>
+                                                    <DropdownMenuItem @click="deleteReply(reply.id)">
+                                                        <Trash2 class="size-4 text-destructive" />
+                                                        Delete
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </div>
-                                        <p class="mt-2">{{ reply.content }}</p>
-                                        <div class="flex items-center mt-2">
-                                            <Button variant="ghost" size="sm" @click="toggleVote(reply.id)"
-                                                :class="{ 'text-primary': reply.votes.some(vote => vote.user_id === $page.props.auth.user.id) }">
-                                                <ThumbsUp class="mr-2 size-4" />
+                                        <p class="px-3 mt-2">{{ reply.content }}</p>
+                                        <div class="flex items-center justify-between pb-2 mt-4">
+                                            <Button class="gap-0" variant="ghost" size="sm"
+                                                @click="toggleVote(reply.id)">
+                                                <ThumbsUp class="mr-2 size-4"
+                                                    :class="{ 'fill-white': reply.votes.some(vote => vote.id == $page.props.auth.user.id) }" />
                                                 {{ reply.votes.length }}
                                             </Button>
                                         </div>

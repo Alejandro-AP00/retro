@@ -21,7 +21,7 @@ class ReplyVoteController extends Controller
             $request->user()->votedReplies()->attach($reply);
         }
 
-        $reply->load('votes.user');
+        $reply->load('votes');
         broadcast(new ReplyVoteUpdated($reply, $reply->column->board))->toOthers();
 
         return response()->json([

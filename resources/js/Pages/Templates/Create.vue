@@ -75,7 +75,7 @@ const submit = () => {
         </template>
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="flex flex-col justify-between mb-4 space-y-6 lg:flex-row lg:items-center lg:space-y-2">
-                <h2 class="text-3xl font-semibold tracking-tight">Templates</h2>
+                <h2 class="text-3xl font-semibold tracking-tight">Create Template</h2>
                 <div class="flex items-center">
                     <Button variant="default" type="submit" @click="submit" :disable="form.processing">
                         Create
@@ -98,7 +98,7 @@ const submit = () => {
                                 :class="{ 'border-destructive': form.errors?.description }" />
                             <small v-if="form.errors?.description" class="text-destructive-text">{{
                                 form.errors?.description
-                            }}</small>
+                                }}</small>
                         </div>
 
                         <ColumnEditor v-model:columns="form.columns" :errors="form.errors"></ColumnEditor>

@@ -21,7 +21,7 @@ class BoardController extends Controller
         }
 
         return Inertia::render('Boards/Index', [
-            'boards' => Board::with('columns')
+            'boards' => Board::with(['columns.replies'])
                 ->where('team_id', $request->user()->current_team_id)
                 ->latest()
                 ->get()

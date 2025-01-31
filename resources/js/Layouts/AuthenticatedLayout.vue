@@ -178,7 +178,7 @@ const switchTeam = async (team) => {
                             <SidebarMenuButton class="text-sidebar-foreground/70" as-child>
                                 <Link :href="route('boards.index')">
                                 <MoreHorizontal class="text-sidebar-foreground/70" />
-                                <span>More</span>
+                                <span>View All</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
