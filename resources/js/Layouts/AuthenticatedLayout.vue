@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import ThemeSwitcher from '@/Components/ThemeSwitcher.vue'
 import { Hash, Moon, Sun } from 'lucide-vue-next'
@@ -54,11 +54,13 @@ import {
     Plus,
     User,
     Settings2,
-    SquareDashedKanban
+    SquareDashedKanban,
+    LayoutDashboard
 } from 'lucide-vue-next'
 import SidebarGroupLabel from '@/Components/ui/sidebar/SidebarGroupLabel.vue';
 import Toaster from '@/Components/ui/toast/Toaster.vue';
 import Button from '@/Components/ui/button/Button.vue';
+import TeamCreateForm from '@/Pages/Teams/Partials/TeamCreateForm.vue';
 
 const showingNavigationDropdown = ref(false);
 const $page = usePage()
@@ -133,15 +135,7 @@ const switchTeam = async (team) => {
                                     {{ team.name }}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem class="gap-2 p-2">
-                                    <div
-                                        class="flex items-center justify-center border rounded-md size-6 bg-background">
-                                        <Plus class="size-4" />
-                                    </div>
-                                    <div class="font-medium text-muted-foreground">
-                                        Add team
-                                    </div>
-                                </DropdownMenuItem>
+                                <TeamCreateForm />
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </SidebarMenuItem>
@@ -154,6 +148,7 @@ const switchTeam = async (team) => {
                         <SidebarMenuItem>
                             <SidebarMenuButton :class="{ 'bg-sidebar-accent': route().current('dashboard') }" as-child>
                                 <Link :href="route('dashboard')">
+                                <LayoutDashboard />
                                 <span>Dashboard</span>
                                 </Link>
                             </SidebarMenuButton>
@@ -250,7 +245,8 @@ const switchTeam = async (team) => {
         </Sidebar>
 
         <SidebarInset>
-            <header class="flex items-center h-16 gap-2 border-b shrink-0">
+            <header
+                class="flex h-16 shrink-0 items-center border-b gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
                 <div class="flex items-center w-full gap-2 px-4">
                     <SidebarTrigger class="-ml-1" />
                     <Separator orientation="vertical" class="h-4 mr-2" />

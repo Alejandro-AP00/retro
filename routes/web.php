@@ -56,6 +56,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/teams/{team}/edit', [TeamController::class, 'edit'])->name('teams.edit');
     Route::put('/teams/{team}', [TeamController::class, 'update'])->name('teams.update');
+    Route::post('/teams', [TeamController::class, 'store'])->name('teams.store');
 
     Route::post('/teams/{team}/members', [TeamInvitationController::class, 'store'])->name('team-invitations.store');
     Route::put('/teams/{team}/members/{user}', [TeamMemberController::class, 'update'])->name('team-members.update');

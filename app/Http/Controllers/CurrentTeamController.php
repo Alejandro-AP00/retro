@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Team;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class CurrentTeamController extends Controller
 {
-    public function update(Request $request): JsonResponse
+    public function update(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'team_id' => ['required', 'exists:teams,id'],
@@ -22,6 +23,6 @@ class CurrentTeamController extends Controller
 
         $request->user()->switchTeam($team);
 
-        return response()->json(['message' => 'Team switched successfully.']);
+        return redirect()->route('dashboard');
     }
 }

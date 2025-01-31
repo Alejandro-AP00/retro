@@ -7,6 +7,11 @@ use App\Models\User;
 
 class TeamPolicy
 {
+    public function create(User $user): bool
+    {
+        return true;
+    }
+
     public function update(User $user, Team $team): bool
     {
         return $user->hasRole('admin', 'web');
