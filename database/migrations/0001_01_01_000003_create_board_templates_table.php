@@ -9,8 +9,8 @@ return new class extends Migration
     public function up()
     {
         Schema::create('board_templates', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('team_id')->constrained('teams');
+            $table->ulid('id')->primary();
+            $table->foreignUlid('team_id')->constrained('teams');
             $table->string('name');
             $table->text('description')->nullable();
             $table->json('columns')->default('[]'); // Add JSON column for storing column configurations

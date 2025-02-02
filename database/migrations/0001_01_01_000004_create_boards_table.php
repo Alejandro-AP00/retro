@@ -9,10 +9,10 @@ return new class extends Migration
     public function up()
     {
         Schema::create('boards', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('team_id')->constrained('teams');
-            $table->foreignId('owner_id')->constrained('users');
-            $table->foreignId('board_template_id')->nullable()->constrained('board_templates');
+            $table->ulid('id')->primary();
+            $table->foreignUlid('team_id')->constrained('teams');
+            $table->foreignUlid('owner_id')->constrained('users');
+            $table->foreignUlid('board_template_id')->nullable()->constrained('board_templates');
             $table->string('name');
             $table->text('description')->nullable();
             $table->timestamp('locked_at')->nullable();

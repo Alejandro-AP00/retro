@@ -9,10 +9,10 @@ return new class extends Migration
     public function up()
     {
         Schema::create('replies', function (Blueprint $table) {
-            $table->id();
+            $table->ulid('id')->primary();
             $table->text('content');
-            $table->foreignId('user_id')->constrained();
-            $table->foreignId('column_id')->constrained()->cascadeOnDelete();
+            $table->foreignUlid('user_id')->constrained();
+            $table->foreignUlid('column_id')->constrained()->cascadeOnDelete();
             $table->integer('order_by')->default(0);
             $table->boolean('is_read')->default(false);
             $table->timestamps();

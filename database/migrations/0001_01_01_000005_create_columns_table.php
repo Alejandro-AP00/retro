@@ -9,11 +9,11 @@ return new class extends Migration
     public function up()
     {
         Schema::create('columns', function (Blueprint $table) {
-            $table->id();
+            $table->ulid('id')->primary();
+            $table->foreignUlid('board_id')->constrained()->cascadeOnDelete();
             $table->string('name');
             $table->text('description')->nullable();
             $table->integer('order')->default(0);
-            $table->foreignId('board_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }

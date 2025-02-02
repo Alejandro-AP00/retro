@@ -10,8 +10,8 @@ return new class extends Migration
     {
         Schema::create('reply_votes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained();
-            $table->foreignId('reply_id')->constrained()->cascadeOnDelete();
+            $table->foreignUlid('user_id')->constrained();
+            $table->foreignUlid('reply_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
 
             // Prevent duplicate votes

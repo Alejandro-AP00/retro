@@ -9,9 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('team_invitations', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('team_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('role_id');
+            $table->ulid('id')->primary();
+            $table->foreignUlid('team_id')->constrained()->cascadeOnDelete();
+            $table->foreignUlid('role_id');
             $table->string('email');
             $table->string('token')->unique();
             $table->timestamp('registered_at')->nullable();

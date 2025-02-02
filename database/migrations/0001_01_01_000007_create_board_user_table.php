@@ -9,9 +9,9 @@ return new class extends Migration
     public function up()
     {
         Schema::create('board_user', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('board_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->ulid('id')->primary();
+            $table->foreignUlid('board_id')->constrained()->cascadeOnDelete();
+            $table->foreignUlid('user_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }
