@@ -14,29 +14,37 @@ class TeamPolicy
 
     public function update(User $user, Team $team): bool
     {
-        return $user->hasRole('admin', 'web');
+        if (!$user->belongsToTeam($team)) {
+            return false;
+        }
+
+        return $user->hasPermissionTo('edit.teams', 'web');
     }
 
     public function invite(User $user, Team $team): bool
     {
-        return $user->hasRole('admin', 'web');
+        if (!$user->belongsToTeam($team)) {
+            return false;
+        }
+
+        return $user->hasPermissionTo('invite.members', 'web');
     }
 
     public function updateMember(User $user, Team $team, User $targetUser): bool
     {
-        if ($targetUser->id === $team->owner_id) {
+        if (!$user->belongsToTeam($team)) {
             return false;
         }
 
-        return $user->hasRole('admin', 'web');
+        return $user->hasPermissionTo('update.members', 'web');
     }
 
     public function removeMember(User $user, Team $team, User $targetUser): bool
     {
-        if ($targetUser->id === $team->owner_id) {
+        if (!$user->belongsToTeam($team)) {
             return false;
         }
 
-        return $user->hasRole('admin', 'web') || $user->id === $targetUser->id;
+        return $user->hasPermissionTo('remove.members', 'web');
     }
 }

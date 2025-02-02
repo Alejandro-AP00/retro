@@ -19,13 +19,13 @@ abstract class TestCase extends BaseTestCase
 
             // Create permissions
             $permissions = [
-                'create boards',
-                'edit boards',
-                'delete boards',
-                'lock boards',
-                'create templates',
-                'edit templates',
-                'delete templates',
+                'create.boards',
+                'edit.boards',
+                'delete.boards',
+                'lock.boards',
+                'create.templates',
+                'edit.templates',
+                'delete.templates',
             ];
 
             foreach ($permissions as $permission) {
@@ -33,7 +33,7 @@ abstract class TestCase extends BaseTestCase
             }
 
             $adminRole->givePermissionTo(Permission::all());
-            $memberRole->givePermissionTo(['create boards']);
+            $memberRole->givePermissionTo(['create.boards']);
         }
 
         $user = User::factory()->create();

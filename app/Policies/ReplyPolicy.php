@@ -42,6 +42,6 @@ class ReplyPolicy
         // Check team-specific permissions
         return $user->id === $reply->user_id || // Reply owner
                $user->id === $reply->column->board->owner_id || // Board owner
-               $user->hasPermissionTo('delete boards'); // Team admin
+               $user->hasPermissionTo('delete.boards'); // Team admin
     }
 }

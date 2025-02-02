@@ -10,17 +10,24 @@ class BoardPolicy
 {
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('view.boards', 'web');
     }
 
     public function view(User $user, Board $board): bool
     {
-        return $board->owner_id === $user->id || $user->belongsToTeam($board->team);
+        if (!$user->belongsToTeam($board->team)) {
+            return false;
+        }
+
+        return $board->owner_id === $user->id || $user->hasPermissionTo('view.boards', 'web');
     }
 
     public function create(User $user, BoardTemplate $template): bool
     {
-        return $user->belongsToTeam($template->team) && $user->hasPermissionTo('create boards', 'web');
+        if (!$user->belongsToTeam($template->team)) {
+            return false;
+        }
+        return $user->hasPermissionTo('create.boards', 'web');
     }
 
     public function update(User $user, Board $board): bool
@@ -29,7 +36,7 @@ class BoardPolicy
             return false;
         }
 
-        return $user->hasPermissionTo('edit boards', 'web') ||
+        return $user->hasPermissionTo('edit.boards', 'web') ||
                $user->id === $board->owner_id;
     }
 
@@ -39,7 +46,7 @@ class BoardPolicy
             return false;
         }
 
-        return $user->hasPermissionTo('delete boards', 'web') ||
+        return $user->hasPermissionTo('delete.boards', 'web') ||
                $user->id === $board->owner_id;
     }
 
@@ -49,7 +56,7 @@ class BoardPolicy
             return false;
         }
 
-        return $user->hasPermissionTo('lock boards', 'web') ||
+        return $user->hasPermissionTo('lock.boards', 'web') ||
                $user->id === $board->owner_id;
     }
 }

@@ -14,13 +14,21 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Create permissions
         $permissions = [
-            'create boards',
-            'edit boards',
-            'delete boards',
-            'lock boards',
-            'create templates',
-            'edit templates',
-            'delete templates',
+            'view.boards',
+            'create.boards',
+            'edit.boards',
+            'delete.boards',
+            'lock.boards',
+
+            'view.templates',
+            'create.templates',
+            'edit.templates',
+            'delete.templates',
+
+            'edit.teams',
+            'invite.members',
+            'update.members',
+            'remove.members',
         ];
 
         foreach ($permissions as $permission) {
@@ -32,5 +40,8 @@ class RolesAndPermissionsSeeder extends Seeder
         $memberRole = Role::create(['name' => 'member', 'team_id' => null]);
 
         $adminRole->givePermissionTo($permissions);
+        $memberRole->givePermissionTo([
+            'view.boards',
+        ]);
     }
 }
